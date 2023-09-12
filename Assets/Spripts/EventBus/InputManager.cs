@@ -6,10 +6,9 @@ public class InputManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.S))
         {
-            EventBus.RaiseEvent<IQuickSaveHandler>(handler =>
+            EventBus.Invoke<IQuickSaveHandler>(handler =>
             {
                 handler.HandleQuickSave();
-                handler.HandleQuickLoad();
             });
         }
     }

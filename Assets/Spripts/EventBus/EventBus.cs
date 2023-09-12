@@ -7,25 +7,24 @@ public static class EventBus
 {
     private static Dictionary<Type, SubscribersList<IGlobalSubscriber>> _subscribers = new();
     private static Dictionary<Type, List<Type>> _cashedSubscriberTypes = new();
-    
-    public static void Subscribe(IGlobalSubscriber subscriber)
+
+    public static void Subscribe(IGlobalSubscriber subscriber, int priority = 0)
     {
         List<Type> subscriberTypes = GetSubscribersTypes(subscriber);
-        
+
         foreach (Type subscriberType in subscriberTypes)
         {
             if (!_subscribers.ContainsKey(subscriberType))
-            {
                 _subscribers[subscriberType] = new SubscribersList<IGlobalSubscriber>();
-                _subscribers[subscriberType].Add(subscriber);
-            }
+
+            _subscribers[subscriberType].Add(subscriber, priority);
         }
     }
-    
+
     public static void Unsubscribe(IGlobalSubscriber subscriber)
     {
         List<Type> subscriberTypes = GetSubscribersTypes(subscriber);
-        
+
         foreach (Type subscriberType in subscriberTypes)
         {
             if (_subscribers.ContainsKey(subscriberType))
@@ -33,25 +32,24 @@ public static class EventBus
         }
     }
 
-    public static void RaiseEvent<TSubscriber>(Action<TSubscriber> action)
+    public static void Invoke<TSubscriber>(Action<TSubscriber> action)
         where TSubscriber : class, IGlobalSubscriber
     {
         SubscribersList<IGlobalSubscriber> subscribers = _subscribers[typeof(TSubscriber)];
-
         subscribers.SwitchExecuting(true);
-        
-        foreach (IGlobalSubscriber subscriber in subscribers.Subscribers)
+
+        for (int j = 0; j < subscribers.Subscribers.Count; j++)
         {
             try
             {
-                action.Invoke(subscriber as TSubscriber);
+                action.Invoke(subscribers.Subscribers[j].T as TSubscriber);
             }
             catch (Exception e)
             {
                 Debug.LogError(e);
             }
         }
-        
+
         subscribers.SwitchExecuting(false);
         subscribers.Cleanup();
     }
@@ -59,7 +57,7 @@ public static class EventBus
     private static List<Type> GetSubscribersTypes(IGlobalSubscriber globalSubscriber)
     {
         Type type = globalSubscriber.GetType();
-        
+
         if (_cashedSubscriberTypes.ContainsKey(type))
             return _cashedSubscriberTypes[type];
 

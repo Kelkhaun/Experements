@@ -1,39 +1,43 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class SubscribersList<TSubscriber> where TSubscriber : class
 {
-    private readonly List<TSubscriber> _subscribers = new();
-    
-    private bool _isNeedCleanUp = false;
+    public readonly List<Subscriber<TSubscriber>> Subscribers = new();
 
-    public IReadOnlyList<TSubscriber> Subscribers => _subscribers;
-    public bool IsExecuting { get; private set; }
+    private bool _isNeedCleanUp = false;
+    private bool _isExecuting;
 
     public void SwitchExecuting(bool state)
     {
-        IsExecuting = state;
+        _isExecuting = state;
     }
-    
-    public void Add(TSubscriber subscriber)
+
+    public void Add(TSubscriber subscriber, int priority = 0)
     {
-        _subscribers.Add(subscriber);
+        Subscriber<TSubscriber> newSubscriber = new Subscriber<TSubscriber>(subscriber, priority);
+        Subscribers.Add(newSubscriber);
+        
+        Subscribers.Sort((s1, s2) => s2.Priority.CompareTo(s1.Priority));
     }
 
     public void Remove(TSubscriber subscriber)
     {
-        if (IsExecuting)
+        Subscriber<TSubscriber> subscriberToRemove = SearchSubscribe(subscriber);
+
+        if (_isExecuting)
         {
-            int i = _subscribers.IndexOf(subscriber);
-            
+            int i = Subscribers.IndexOf(subscriberToRemove);
+
             if (i >= 0)
             {
                 _isNeedCleanUp = true;
-                _subscribers[i] = null;
+                Subscribers[i] = null;
             }
         }
         else
         {
-            _subscribers.Remove(subscriber);
+            Subscribers.Remove(subscriberToRemove);
         }
     }
 
@@ -42,7 +46,19 @@ public class SubscribersList<TSubscriber> where TSubscriber : class
         if (!_isNeedCleanUp)
             return;
 
-        _subscribers.RemoveAll(s => s == null);
+        Subscribers.RemoveAll(s => s == null);
         _isNeedCleanUp = false;
+    }
+
+    private Subscriber<TSubscriber> SearchSubscribe(TSubscriber subscriber)
+    {
+        for (int i = 0; i < Subscribers.Count; i++)
+        {
+            if (Subscribers[i].T == subscriber)
+                return Subscribers[i];
+        }
+
+        Debug.Log("Not found subscriber");
+        return null;
     }
 }

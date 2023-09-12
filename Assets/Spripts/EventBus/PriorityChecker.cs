@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-public class SaveLoadManager : MonoBehaviour, IQuickSaveHandler
+public class PriorityChecker : MonoBehaviour, IQuickSaveHandler
 {
     private void OnEnable()
     {
-        EventBus.Subscribe(this, 2);
+        EventBus.Subscribe(this, 7);
     }
 
     private void OnDisable()
@@ -14,7 +14,7 @@ public class SaveLoadManager : MonoBehaviour, IQuickSaveHandler
 
     public void HandleQuickSave()
     {
-        print("вызов сохранения SaveLoadManager");
+        print("вызов сохранения Priority Checker");
     }
 
     public void HandleQuickLoad()
