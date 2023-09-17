@@ -32,8 +32,7 @@ public static class EventBus
         }
     }
 
-    public static void Invoke<TSubscriber>(Action<TSubscriber> action)
-        where TSubscriber : class, IGlobalSubscriber
+    public static void Invoke<TSubscriber>(Action<TSubscriber> action) where TSubscriber : class, IGlobalSubscriber
     {
         SubscribersList<IGlobalSubscriber> subscribers = _subscribers[typeof(TSubscriber)];
         subscribers.SwitchExecuting(true);
